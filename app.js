@@ -11,6 +11,7 @@ const app = new App({
   socketMode: true,
 });
 
+const queue = [];
 
 (async () => {
   try {
@@ -21,11 +22,20 @@ const app = new App({
 })();
 
 
-app.event('app_home_opened', ({ event, say }) => {
-  say(`Hello world, <@${event.user}>!`)
-});
+app.command('/queue', async ({ command, ack, respond, say }) => {
+  // Acknowledge command request
+  await ack();
 
-
-app.event('app_mentioned', ({ event, say }) => {
-  say(`Hello world, <@${event.user}>!`)
+  switch (command.text) {
+    case "show":
+      await say(JSON.stringify(queue));
+      break;
+    case "join":
+      queue.push(`Item ${queue.length + 1}`);
+      await say(JSON.stringify(queue));
+      break;
+    default:
+      await say(`${command.text} is not a valid option`);
+  }
+  console.log(command)
 });
