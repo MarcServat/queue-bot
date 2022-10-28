@@ -79,6 +79,7 @@ app.command('/queue', async ({ command, ack, respond, say }) => {
         await say(`failed, squad *${commandParams[1]}* not found in queue`);
       }
       await say(getStringifiedQueue());
+      break;
     default:
       await say(`:red_circle:  *${command.text}* is not a valid option `);
   }
