@@ -48,12 +48,21 @@ app.event('app_mentioned', ({ event, say }) => {
 app.command('/queue', async ({ command, ack, respond, say }) => {
   await ack();
   const commandParams = command.text.split(' ');
+  if(commandParams[1] && !commandParams[1].startsWith('@')) {
+    await say(`Error: Name of squad shoud start with @ symbol`);
+    return;
+  }
+
+  if(commandParams.length > 2) {
+    await say(`Error: More then 1 parameter used. Do you wanted to use '/queue ${commandParams[0]} ${commandParams[1]}'?`);
+    return;
+  }
 
   switch (commandParams[0]) {
     case "help":
       await say(`*/queue list* - show current queue\n
-*/queue add <squad>* - add your squad to the queue\n
-*/queue remove <squad>* - remove your squad from the queue\n`);
+*/queue add *@squad* - add your squad to the queue\n
+*/queue remove *@squad* - remove your squad from the queue\n`);
       break;
     case "list":
       if (!queue.length) {
@@ -63,8 +72,12 @@ app.command('/queue', async ({ command, ack, respond, say }) => {
       await say(getStringifiedQueue());
       break;
     case "add":
+      if (queue.find(item => item.name.toLowerCase() === commandParams[1].toLowerCase())) {
+        await say(`<${commandParams[1]}> is already in the queue`);
+        return;
+      }
       queue.push({ name: commandParams[1], date: new Date()});
-      await say(`${commandParams[1]} added`);
+      await say(`<${commandParams[1]}> added`);
       await say(getStringifiedQueue());
       break;
     case "remove":
@@ -74,7 +87,8 @@ app.command('/queue', async ({ command, ack, respond, say }) => {
       }
       if (queue.find(item => item.name.toLowerCase() === commandParams[1].toLowerCase())) {
         queue = queue.filter(item => item.name.toLowerCase() !== commandParams[1].toLowerCase());
-        await say(`${commandParams[1]} removed`);
+        await say(`<${commandParams[1]}> removed`);
+        await say(`<${queue[0].name}> is in the first position of queue`);
       } else {
         await say(`failed, squad *${commandParams[1]}* not found in queue`);
       }
