@@ -20,12 +20,66 @@ const app = new App({
   }
 })();
 
+let queue = [];
+
+const getTimeDifferenceInMinutes = (date) => {
+  const diffTime = Math.abs(new Date() - date);
+  return `${Math.round(diffTime / 60000)}min`;
+}
+
+const getStringifiedQueue = () => {
+  if (!queue.length) { 
+    return; 
+  }
+  const divider = '-------------------';
+  let response = [divider];
+  queue.forEach(item => response.push(`${getTimeDifferenceInMinutes(item.date)} *${item.name}*`));
+  return [...response, divider].join('\n');
+}
 
 app.event('app_home_opened', ({ event, say }) => {
-  say(`Hello world, <@${event.user}>!`)
+  say(`Hello, <@${event.user}>! You chan check available commands using /queue help`);
 });
 
-
 app.event('app_mentioned', ({ event, say }) => {
-  say(`Hello world, <@${event.user}>!`)
+  say(`I'm here, <@${event.user}>!`)
+});
+
+app.command('/queue', async ({ command, ack, respond, say }) => {
+  await ack();
+  const commandParams = command.text.split(' ');
+
+  switch (commandParams[0]) {
+    case "help":
+      await say(`*/queue list* - show current queue\n
+*/queue add <squad>* - add your squad to the queue\n
+*/queue remove <squad>* - remove your squad from the queue\n`);
+      break;
+    case "list":
+      if (!queue.length) {
+        await say(`queue is empty`);
+        return true;
+      }
+      await say(getStringifiedQueue());
+      break;
+    case "add":
+      queue.push({ name: commandParams[1], date: new Date()});
+      await say(`${commandParams[1]} added`);
+      await say(getStringifiedQueue());
+      break;
+    case "remove":
+      if (!queue.length) {
+        await say(`queue is empty`);
+        return true;
+      }
+      if (queue.find(item => item.name.toLowerCase() === commandParams[1].toLowerCase())) {
+        queue = queue.filter(item => item.name.toLowerCase() !== commandParams[1].toLowerCase());
+        await say(`${commandParams[1]} removed`);
+      } else {
+        await say(`failed, squad *${commandParams[1]}* not found in queue`);
+      }
+      await say(getStringifiedQueue());
+    default:
+      await say(`:red_circle:  *${command.text}* is not a valid option `);
+  }
 });
