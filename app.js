@@ -117,7 +117,7 @@ app.command('/queue', async ({ command, ack, respond, say }) => {
       await say(getStringifiedQueue());
       break;
     case "move":
-      if (commandParams[2] !== "first" && commandParams[2] !== "last" && commandParams[2].parseInt() >0 && commandParams[2].parseInt() < queue.length) {
+      if (commandParams[2] !== "first" && commandParams[2] !== "last" && parseInt(Number(commandParams[2]), 10) > 0 && parseInt(Number(commandParams[2]), 10) < queue.length) {
         await say(`the second parameter should be "first", "last" or position number (1 - ${queue.length})`);
         return true;
       }
@@ -137,7 +137,7 @@ app.command('/queue', async ({ command, ack, respond, say }) => {
             queue.push(queueEntry);
             break;
           default:
-            const position = commandParams[2].parseInt() - 1;
+            const position = parseInt(Number(commandParams[2]), 10) - 1;
             queue.splice(position, 0, queueEntry);
             break;
         }
