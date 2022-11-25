@@ -49,7 +49,7 @@ app.command('/queue', async ({ command, ack, respond, say }) => {
   await ack();
   const commandParams = command.text.split(' ');
   if(commandParams[1] && !commandParams[1].startsWith('@')) {
-    await say(`Error: Name of squad shoud start with @ symbol`);
+    await say(`Error: Name of entity shoud start with @ symbol`);
     return;
   }
 
@@ -61,8 +61,8 @@ app.command('/queue', async ({ command, ack, respond, say }) => {
   switch (commandParams[0]) {
     case "help":
       await say(`*/queue list* - show current queue\n
-*/queue add *@squad* - add your squad to the queue\n
-*/queue remove *@squad* - remove your squad from the queue\n`);
+*/queue add *@entity* - add your entity to the queue\n
+*/queue remove *@entity* - remove your entity from the queue\n`);
       break;
     case "list":
       if (!queue.length) {
@@ -90,7 +90,7 @@ app.command('/queue', async ({ command, ack, respond, say }) => {
         await say(`<${commandParams[1]}> removed`);
         await say(`<${queue[0].name}> is in the first position of queue`);
       } else {
-        await say(`failed, squad *${commandParams[1]}* not found in queue`);
+        await say(`failed, entity *${commandParams[1]}* not found in queue`);
       }
       await say(getStringifiedQueue());
       break;
