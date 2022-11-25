@@ -21,6 +21,7 @@ const app = new App({
 })();
 
 let queue = [];
+let log = [];
 
 const getTimeDifferenceInMinutes = (date) => {
   const diffTime = Math.abs(new Date() - date);
@@ -37,8 +38,18 @@ const getStringifiedQueue = () => {
   return [...response, divider].join('\n');
 }
 
+const getStringifiedLog = () => {
+  if (!log.length) { 
+    return; 
+  }
+  const divider = '-------------------';
+  let response = [divider];
+  log.forEach(item => response.push(`${item.command} - ${item.user}`));
+  return [...response, divider].join('\n');
+}
+
 app.event('app_home_opened', ({ event, say }) => {
-  say(`Hello, <@${event.user}>! You chan check available commands using /queue help`);
+  say(`Hello, <@${event.user}>! You can check available commands using /queue help`);
 });
 
 app.event('app_mentioned', ({ event, say }) => {
@@ -47,22 +58,26 @@ app.event('app_mentioned', ({ event, say }) => {
 
 app.command('/queue', async ({ command, ack, respond, say }) => {
   await ack();
+  log.push({ command: command.text, user: command.user_name, date: new Date()});
   const commandParams = command.text.split(' ');
   if(commandParams[1] && !commandParams[1].startsWith('@')) {
     await say(`Error: Name of entity shoud start with @ symbol`);
     return;
   }
 
-  if(commandParams.length > 2) {
-    await say(`Error: More then 1 parameter used. Do you wanted to use '/queue ${commandParams[0]} ${commandParams[1]}'?`);
-    return;
-  }
+  // if(commandParams.length > 2) {
+  //   await say(`Error: More then 1 parameter used. Do you wanted to use '/queue ${commandParams[0]} ${commandParams[1]}'?`);
+  //   return;
+  // }
 
   switch (commandParams[0]) {
     case "help":
       await say(`*/queue list* - show current queue\n
 */queue add *@entity* - add your entity to the queue\n
-*/queue remove *@entity* - remove your entity from the queue\n`);
+*/queue move *@entity* *position* - move entity to specific position (first, last, number)\n
+*/queue remove *@entity* - remove your entity from the queue\n
+*/queue log - show log\n
+`);
       break;
     case "list":
       if (!queue.length) {
@@ -70,6 +85,13 @@ app.command('/queue', async ({ command, ack, respond, say }) => {
         return true;
       }
       await say(getStringifiedQueue());
+      break;
+    case "log":
+      if (!log.length) {
+        await say(`log is empty`);
+        return true;
+      }
+      await say(getStringifiedLog());
       break;
     case "add":
       if (queue.find(item => item.name.toLowerCase() === commandParams[1].toLowerCase())) {
@@ -89,6 +111,37 @@ app.command('/queue', async ({ command, ack, respond, say }) => {
         queue = queue.filter(item => item.name.toLowerCase() !== commandParams[1].toLowerCase());
         await say(`<${commandParams[1]}> removed`);
         await say(`<${queue[0].name}> is in the first position of queue`);
+      } else {
+        await say(`failed, entity *${commandParams[1]}* not found in queue`);
+      }
+      await say(getStringifiedQueue());
+      break;
+    case "move":
+      if (commandParams[2] !== "first" && commandParams[2] !== "last" && commandParams[2].parseInt() >0 && commandParams[2].parseInt() < queue.length) {
+        await say(`the second parameter should be "first", "last" or position number (1 - ${queue.length})`);
+        return true;
+      }
+      if (!queue.length) {
+        await say(`can't move entity, queue is empty`);
+        return true;
+      }
+      if (queue.find(item => item.name.toLowerCase() === commandParams[1].toLowerCase())) {
+        const date = queue.find(item => item.name.toLowerCase() !== commandParams[1].toLowerCase()).date;
+        queue = queue.filter(item => item.name.toLowerCase() !== commandParams[1].toLowerCase());
+        const queueEntry = { name: commandParams[1], date: date};
+        switch (commandParams[2]) {
+          case "first":
+            queue.unshift(queueEntry);
+            break;
+          case "last":
+            queue.push(queueEntry);
+            break;
+          default:
+            const position = commandParams[2].parseInt() - 1;
+            queue.splice(position, 0, queueEntry);
+            break;
+        }
+        await say(`<${commandParams[1]}> moved`);
       } else {
         await say(`failed, entity *${commandParams[1]}* not found in queue`);
       }
