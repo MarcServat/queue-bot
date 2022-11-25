@@ -58,17 +58,13 @@ app.event('app_mentioned', ({ event, say }) => {
 
 app.command('/queue', async ({ command, ack, respond, say }) => {
   await ack();
+  await say(command.text);
   log.push({ command: command.text, user: command.user_name, date: new Date()});
   const commandParams = command.text.split(' ');
   if(commandParams[1] && !commandParams[1].startsWith('@')) {
     await say(`Error: Name of entity shoud start with @ symbol`);
     return;
   }
-
-  // if(commandParams.length > 2) {
-  //   await say(`Error: More then 1 parameter used. Do you wanted to use '/queue ${commandParams[0]} ${commandParams[1]}'?`);
-  //   return;
-  // }
 
   switch (commandParams[0]) {
     case "help":
@@ -117,8 +113,9 @@ app.command('/queue', async ({ command, ack, respond, say }) => {
       await say(getStringifiedQueue());
       break;
     case "move":
-      if (commandParams[2] !== "first" && commandParams[2] !== "last" && parseInt(Number(commandParams[2]), 10) > 0 && parseInt(Number(commandParams[2]), 10) < queue.length) {
-        await say(`the second parameter should be "first", "last" or position number (1 - ${queue.length})`);
+      console.log(parseInt(Number(commandParams[2]), 10), queue.length);
+      if (commandParams[2] !== "first" && commandParams[2] !== "last" && (parseInt(Number(commandParams[2]), 10) < 1 || parseInt(Number(commandParams[2]), 10) > queue.length)) {
+        await say(`the second parameter should be "first", "last" or position number between 1 and ${queue.length}`);
         return true;
       }
       if (!queue.length) {
